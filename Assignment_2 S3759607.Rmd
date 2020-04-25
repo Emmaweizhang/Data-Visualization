@@ -1,0 +1,84 @@
+---
+title: "Assignment 2"
+subtitle: "Deconstruct, Reconstruct Web Report"
+author: "Wei Zhang, S3759607"
+output: html_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+# Do not change these settings!
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+### {.tabset} 
+
+Click the **Original**, **Code** and **Reconstruction** tabs to read about the issues and how they were fixed. 
+
+#### Original
+
+<br>
+<center>
+<img src="Languages in Amazon job description.png" width="80%">
+</center>
+<center>*Source: Analysis of Amazon Job Openings Data (www.kaggle.com)*</center>
+<br>
+
+**Objective**
+
+The objective of the original data visualisation is to show what languages are required for getting hired in Amazon. This is done by scraping Amazon job portal at https://amazon.jobs 
+The targetted audience is university graduates, job-seekers or the general public.  
+
+The visualisation chosen had the following three main issues:
+
+* Colour issue - The rainbow colours have some continuous elements in each of the magenta, blue, green and orange groups. This is misleading for this nominal variable. For example, java is not more related to javascript than it is to c. There is no point to group the languages with continuous colour scales when each of the languages are independent.
+* Data integrity - SQL could be underrepresented. Mysql is a database management system just like Oracle, SQL server etc. In this visulisation, mysql occurred 50 times in the job description. This cannot tell audience exactly how popular SQL actually is. 
+* Ethical issue - There are java.(ending in full stop) and java, (ending in comma) in the y axis, which causes confusion. They are not two different languages. Instead, they are just two patterns used by creator to search java language. Their occurence times should be added to reflect the real demands for java.
+ 
+
+**Reference**
+
+* Kaggle Datasets Section. (2018). *Analysis of Amazon Job Openings Data*. Retrieved September 17, 2019, from Kaggle website: https://www.kaggle.com/kratisaxena/analysis-of-amazon-job-openings-data/notebook
+
+#### Code
+
+The following code was used to fix the issues identified in the original. 
+
+```{r}
+library(ggplot2)
+library(readr)
+library(stringr)
+library(dplyr)
+amazon <- read_csv("C:/RMIT/Data Visulization S1 19/Assignment2/amazon_jobs_dataset.csv")
+# What languages are required for jobs?
+occurence <- c()
+languages <- c('swift','matlab','mongodb','hadoop','cosmos', 'sql','spark', 'pig', 'python', 'java,', 'java.', 'java ', 'c[++]', 'php', 'javascript', 'objective c', 'ruby', 'perl', 'c ', 'c#', ' r,')
+amazon$`PREFERRED QUALIFICATIONS` <- tolower(amazon$`PREFERRED QUALIFICATIONS`)
+
+for(i in languages){
+  amazon$number <- str_count(amazon$`PREFERRED QUALIFICATIONS`, i)
+  occurence <- c(occurence, sum(amazon$number, na.rm = TRUE))
+}
+occurence
+# combine the occurences of 'java,', 'java.', 'java ' to 'jave'
+languages_new <- data.frame(Languages = c('swift','matlab','mongodb','hadoop','cosmos', 'sql','spark', 'pig', 'python', 'java', 'c[++]', 'php', 'javascript', 'objective c', 'ruby', 'perl', 'c', 'c#', 'r'), Occurence = c(26, 9, 16, 164, 1,408, 128, 20, 378, 1753, 504, 34, 348, 79, 237, 188, 630, 139, 7))
+# To reorder it according to Occurence
+languages_new$Languages <- languages_new$Languages %>% factor(levels = languages_new$Languages[order(-languages_new$Occurence)])
+p <- ggplot(data = languages_new, aes(x = Languages, y = Occurence))
+p1 <- p + geom_bar(stat = "identity", fill="tan3") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = "Languages in Amazon's job description \nJuly 2011 to March 2018", y = "Occurence", x = "Languages in job description") +
+  geom_text(aes(label=Occurence), vjust = -0.5, size = 3)
+```
+
+**Data Reference**
+
+* Kaggle Datasets Section. (2018). *Amazon Job Skills*. Retrieved September 17, 2019, from Kaggle website: https://www.kaggle.com/atahmasb/amazon-job-skills
+
+#### Reconstruction1
+
+The following plot fixes the main issues in the original.
+
+```{r fig.align="center", echo = FALSE}
+p1
+```
+
+
